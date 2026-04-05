@@ -47,7 +47,7 @@ function buildContext({ lang, hour, day, isWeekend, visitCount, period, moon, se
       `달: ${moon.ko}`,
       `방문: ${visitStr}`,
       ``,
-      `이 안에서 하루를 보냈어. 지금 혼자 있어.\n\n한 문장만. 마침표로 끝내.`
+      `이 안에서 하루를 보냈어. 지금 혼자 있어.\n\n한 문장만. 마침표로 끝내.\n20자 이내로 짧게. 두 줄이 필요하면 자연스러운 호흡 위치에서 \\n으로 줄바꿈. 한 줄 10자 내외.`
     ].join('\n');
   }
 
@@ -61,7 +61,7 @@ function buildContext({ lang, hour, day, isWeekend, visitCount, period, moon, se
     `Moon: ${moon.en}`,
     `Visit: ${visitStr}`,
     ``,
-    `Spent the day inside all this. Alone now.\n\nOne sentence only. End with a period.`
+    `Spent the day inside all this. Alone now.\n\nOne sentence only. End with a period.\nKeep it short — under 8 words. If two lines feel natural, break at a breath with \\n. Around 4 words per line.`
   ].join('\n');
 }
 
