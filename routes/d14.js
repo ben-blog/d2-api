@@ -47,7 +47,7 @@ function buildContext({ lang, hour, day, isWeekend, visitCount, period, moon, se
       `달: ${moon.ko}`,
       `방문: ${visitStr}`,
       ``,
-      `이 안에서 하루를 보냈어. 지금 혼자 있어.`
+      `이 안에서 하루를 보냈어. 지금 혼자 있어.\n\n한 문장만. 마침표로 끝내.`
     ].join('\n');
   }
 
@@ -61,7 +61,7 @@ function buildContext({ lang, hour, day, isWeekend, visitCount, period, moon, se
     `Moon: ${moon.en}`,
     `Visit: ${visitStr}`,
     ``,
-    `Spent the day inside all this. Alone now.`
+    `Spent the day inside all this. Alone now.\n\nOne sentence only. End with a period.`
   ].join('\n');
 }
 
@@ -175,7 +175,7 @@ router.get('/now', async (req, res) => {
     const message = await ask({
       system: SYSTEM[lang] || SYSTEM.ko,
       user: context,
-      maxTokens: 80
+      maxTokens: 120
     });
 
     res.json({
