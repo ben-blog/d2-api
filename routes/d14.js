@@ -222,6 +222,10 @@ router.get('/now', async (req, res) => {
       message: cleanMessage
     });
 
+    // 브라우저 캐시 방지 — 매 요청마다 서버에서 생성해야 이벤트 전송됨
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.set('Pragma', 'no-cache');
+
     res.json({
       message: cleanMessage,
       period,
