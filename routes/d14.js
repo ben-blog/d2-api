@@ -215,7 +215,7 @@ router.get('/now', async (req, res) => {
     notifyDredAgent('d14', 'message_generated', {
       hour: hourNum,
       day: dayNum,
-      period,
+      period_name: PERIOD_NAMES[lang]?.[period] || PERIOD_NAMES.ko[period],
       lang,
       moon: lang === 'ko' ? moon.ko : moon.en,
       season: lang === 'ko' ? season.ko : season.en,
