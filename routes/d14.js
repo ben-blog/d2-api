@@ -1,9 +1,39 @@
 const { Router } = require('express');
+const https = require('https');
+const http = require('http');
 const { ask } = require('../utils/claude');
 const { getMoonPhase, getSeason } = require('../utils/astronomy');
 const { getLocation, getClientIp } = require('../utils/location');
 
 const router = Router();
+
+// ── DRED 에이전트 이벤트 전송 (fire-and-forget) ────
+function notifyDredAgent(service, event_type, payload) {
+  const dredApiUrl = process.env.DRED_API_URL;
+  if (!dredApiUrl) return; // env 미설정이면 스킵
+
+  try {
+    const url = new URL('/api/dred/event', dredApiUrl);
+    const body = JSON.stringify({ service, event_type, payload });
+    const lib = url.protocol === 'https:' ? https : http;
+
+    const req = lib.request(
+      {
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+      },
+      () => {} // 응답 무시
+    );
+    req.on('error', (err) => console.error('[D14→DRED]', err.message));
+    req.write(body);
+    req.end();
+  } catch (err) {
+    console.error('[D14→DRED] URL 파싱 오류:', err.message);
+  }
+}
 
 // ── 시간대 (7개) ───────────────────────────────────
 function getPeriod(hour) {
@@ -180,6 +210,17 @@ router.get('/now', async (req, res) => {
 
     // Claude가 리터럴 '\n' 문자열을 반환할 경우 실제 줄바꿈으로 변환
     const cleanMessage = message.replace(/\\n/g, '\n');
+
+    // DRED 에이전트에 이벤트 전송 (선언 저장 + 패턴 감지)
+    notifyDredAgent('d14', 'message_generated', {
+      hour: hourNum,
+      day: dayNum,
+      period,
+      lang,
+      moon: lang === 'ko' ? moon.ko : moon.en,
+      season: lang === 'ko' ? season.ko : season.en,
+      message: cleanMessage
+    });
 
     res.json({
       message: cleanMessage,

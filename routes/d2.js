@@ -1,8 +1,38 @@
 const { Router } = require('express');
+const https = require('https');
+const http = require('http');
 const supabase = require('../utils/supabase');
 const { ask } = require('../utils/claude');
 
 const router = Router();
+
+// ── DRED 에이전트 이벤트 전송 (fire-and-forget) ────
+function notifyDredAgent(service, event_type, payload) {
+  const dredApiUrl = process.env.DRED_API_URL;
+  if (!dredApiUrl) return; // env 미설정이면 스킵
+
+  try {
+    const url = new URL('/api/dred/event', dredApiUrl);
+    const body = JSON.stringify({ service, event_type, payload });
+    const lib = url.protocol === 'https:' ? https : http;
+
+    const req = lib.request(
+      {
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+      },
+      () => {} // 응답 무시
+    );
+    req.on('error', (err) => console.error('[D2→DRED]', err.message));
+    req.write(body);
+    req.end();
+  } catch (err) {
+    console.error('[D2→DRED] URL 파싱 오류:', err.message);
+  }
+}
 
 // ── 트랙 선택 로직 ─────────────────────────────────
 class RuleBasedSelector {
@@ -72,6 +102,16 @@ router.post('/now', async (req, res) => {
       is_random,
       track_id: track.id,
       lang
+    });
+
+    // DRED 에이전트에 이벤트 전송 (선언 저장 + 패턴 감지)
+    notifyDredAgent('d2', 'line_generated', {
+      keywords: tags,
+      song_title: track.title,
+      artist: track.artist,
+      dred_line,
+      lang,
+      is_random
     });
 
     res.json({
